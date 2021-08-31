@@ -1,81 +1,9 @@
-
 from obj import Obj
-from collections import namedtuple
 from Funciones.characters import *
 from Funciones.math import *
+from Funciones.utilities import *
+from Funciones.write import *
 import random
-import math
-
-V2 = namedtuple("Point2D",['x','y'])
-V3 = namedtuple("Point3D",['x','y','z'])
-
-class V3(object):
-    def __init__(self, x, y, z=None):
-        self.x = x
-        self.y = y
-        self.z = z
-    def __getitem__(self,i):
-        if i == 0:
-            return self.x
-        elif i == 1:
-            return self.y
-        elif i == 2:
-            return self.z
-    def __repr__(self):
-        return 'V3(%s, %s, %s)' % (self.x,self.y,self.z)
-
-def ccolor(color):
-    return max(0,min(255,int(color)))
-
-class color(object):
-    def __init__(self, r, g, b):
-        self.r = r
-        self.g = g
-        self.b = b
-
-    def __repr__(self):
-        b= ccolor(self.b)
-        g= ccolor(self.g)
-        r= ccolor(self.r)
-        return 'Y(%s,%s,%s)' % (b,g,r)
-
-    def toBytes(self):
-        b= ccolor(self.b)
-        g= ccolor(self.g)
-        r= ccolor(self.r)
-        return bytes([b,g,r])
-
-    def __mul__(self,k):
-        r= ccolor(self.r*k)
-        g= ccolor(self.g*k)
-        b= ccolor(self.b*k)
-
-        return color(r,g,b)
-
-
-#setting the function to get color with bytes
-
-
-BLACK = color(0,0,0)
-WHITE = color(255,255,255)
-
-def barycentric(A,B,C,P):
-        cx,cy,cz = cross(V3(B.x-A.x,C.x-A.x,A.x-P.x),V3(B.y-A.y,C.y-A.y,A.y-P.y))
-        if cz ==0:
-            return -1,-1,-1
-
-        u = cx/cz
-        v = cy/cz
-        w = 1-(cx+cy)/cz
-
-        return w,v,u
-
-def bbox(A,B,C):
-    xs = [A.x, B.x, C.x,]
-    xs.sort()
-    ys = [A.y, B.y, C.y,]
-    ys.sort()
-    return xs[0],xs[-1],ys[0],ys[-1]
 
 class Renderer(object):
     def __init__(self):
@@ -142,8 +70,6 @@ class Renderer(object):
             [self.backcolor(*random.choice(setr)) for x in range(self.width)] for y in range(self.height)
             ]
 
-
-
     def glVertex(self,x,y):
         #formula get from microsoft glViewport function
         x_pos = int((x+1)*(self.vp_width/2)+self.vp_x)
@@ -156,7 +82,6 @@ class Renderer(object):
             self.default_color = color(r,g,b)
         except:
             self.default_color = color(int(r*255),int(g*255),int(b*255))
-
 
     #Using class implementation
     #REESCRIBIR
@@ -258,7 +183,6 @@ class Renderer(object):
                 print('Done')
 
 
-
     def fill(self):
         bandera = False
         arreglo = []
@@ -335,7 +259,7 @@ class Renderer(object):
 
             for x in range(xmin,xmax+1):
                 for y in range(ymin,ymax+1):
-                    P = V2(x,y)
+                    P = V3(x,y)
                     w,v,u = barycentric(A,B,C,P)
                     if w<0 or v<0 or u<0:
                         continue
@@ -382,7 +306,7 @@ class Renderer(object):
 
             for x in range(xmin,xmax+1):
                 for y in range(ymin,ymax+1):
-                    P = V2(x,y)
+                    P = V3(x,y)
                     w,v,u = barycentric(A,B,C,P)
                     if w<0 or v<0 or u<0:
                         continue
@@ -412,9 +336,6 @@ class Renderer(object):
                                 self.zbuffer[y][x] =z
                     except:
                         pass
-
-
-
 
     def shader(self, x,y):
         centerx,centery = 500,353
@@ -509,81 +430,3 @@ class Renderer(object):
         else:
             return palette[3][2],palette[3][1],palette[3][0]
 
-    def glFinish(self, filename):
-        #bw means binary write
-        f = open(filename, 'bw')
-        #file header
-        f.write(char('B'))
-        f.write(char('M'))
-        f.write(dword(14+40+ 3*(self.width*self.height)))
-        f.write(dword(0))
-        f.write(dword(14+40))
-
-        #info header
-        f.write(dword(40))
-        f.write(dword(self.width))
-        f.write(dword(self.height))
-        f.write(word(1))
-        f.write(word(24))
-        f.write(dword(0))
-        f.write(dword(3*(self.width*self.height)))
-        f.write(dword(0))
-        f.write(dword(0))
-        f.write(dword(0))
-        f.write(dword(0))
-
-        #bitmap
-        for y in range(self.height):
-            for x in range(self.width):
-                f.write(self.framebuffer[y][x].toBytes())
-
-        f.close()
-
-    def glFinish_ZBUFFER(self, filename):
-        #bw means binary write
-        f = open(filename, 'bw')
-        #file header
-        f.write(char('B'))
-        f.write(char('M'))
-        f.write(dword(14+40+ 3*(self.width*self.height)))
-        f.write(dword(0))
-        f.write(dword(14+40))
-
-        #info header
-        f.write(dword(40))
-        f.write(dword(self.width))
-        f.write(dword(self.height))
-        f.write(word(1))
-        f.write(word(24))
-        f.write(dword(0))
-        f.write(dword(3*(self.width*self.height)))
-        f.write(dword(0))
-        f.write(dword(0))
-        f.write(dword(0))
-        f.write(dword(0))
-
-        z_min = float('inf')
-        z_max = -float('inf')
-
-        for x in range(self.height):
-            for y in range(self.width):
-                if self.zbuffer[x][y] != -float('inf'):
-                    if self.zbuffer[x][y] > z_max:
-                        z_max = self.zbuffer[x][y]
-
-                    if self.zbuffer[x][y] < z_min:
-                        z_min = self.zbuffer[x][y]
-
-        for x in range(self.height):
-            for y in range(self.width):
-                z_value = self.zbuffer[x][y]
-
-                if z_value == -float('inf'):
-                    z_value = z_min
-
-                z_value = round(((z_value - z_min) / (z_max - z_min)) * 255)
-
-                z_color = color(z_value, z_value, z_value)
-                f.write(z_color)
-
-        f.close()
