@@ -5,6 +5,7 @@ Laboratorio 2 - Shaders
 '''
 from gl import Renderer, color
 from textures import Texture
+from Funciones.utilities import *
 
 
 r =  Renderer()
