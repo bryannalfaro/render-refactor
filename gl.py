@@ -3,6 +3,7 @@ from Funciones.characters import *
 from Funciones.math import *
 from Funciones.utilities import *
 from Funciones.write import *
+from numpy import sin,cos,matrix
 import random
 
 class Renderer(object):
@@ -142,14 +143,41 @@ class Renderer(object):
             for pointf in points:
                 self.point(*pointf)
 
+    def transform(self,v):
+        augmented_vertex = [
+            [v.x],
+            [v.y],
+            [v.z],
+            [1]
+        ]
+        '''augmented_vertex2 = [
+            v.x,
+            v.y,
+            v.z,
+            1
+        ]'''
 
-    def load(self, filename, movement, scale):
+        transformed_vertex = self.Model  * Matrix(augmented_vertex)
+        #transformed_vertex2 = self.Model2  @ augmented_vertex2
+        '''print('tvert',transformed_vertex)
+        print('tvert2',transformed_vertex2)
+        transformed_vertex.tolist()
+        print('tolist',transformed_vertex[0][1][0])'''
+        transformed_vertex = [
+            round(transformed_vertex[0][0][0]/transformed_vertex[0][3][0]),
+            round(transformed_vertex[0][1][0]/transformed_vertex[0][3][0]),
+            round(transformed_vertex[0][2][0]/transformed_vertex[0][3][0]),
+        ]
+        return V3(*transformed_vertex)
+
+    def load(self, filename, movement, scale,rotate):
+        self.loadModelMatrix(movement,scale,rotate)
         model = Obj(filename)
 
         vertex_buffer_object = []
         for face in (model.faces):
             for v in range(len(face)):
-                vertex = transform(V3(*model.vertices[face[v][0]-1]), movement,scale)
+                vertex = self.transform(V3(*model.vertices[face[v][0]-1]))
                 vertex_buffer_object.append(vertex)
             if self.texture:
                 for v in range(len(face)):
@@ -157,6 +185,41 @@ class Renderer(object):
                     vertex_buffer_object.append(tvertex)
 
         self.active_vertex_array = iter(vertex_buffer_object)
+
+
+
+    def loadModelMatrix(self, movement,scale,rotate):
+        movement = V3(*movement)
+        scale = V3(*scale)
+        rotate = V3(*rotate)
+
+        translation_matrix = Matrix([[1,0,0,movement.x],[0,1,0,movement.y],[0,0,1,movement.z],[0,0,0,1]])
+
+        a  = rotate.x
+        rotation_matrix_x = Matrix([[1,0,0,0],[0,cos(a),-sin(a),0],[0,sin(a),cos(a),0],[0,0,0,1]])
+        a = rotate.y
+        rotation_matrix_y = Matrix([[cos(a),0,sin(a),0],[0,1,0,0],[-sin(a),0,cos(a),0],[0,0,0,1]])
+        a = rotate.z
+        rotation_matrix_z = Matrix([[cos(a),-sin(a),0,0],[sin(a),cos(a),0,0],[0,0,1,0],[0,0,0,1]])
+
+        rotation_matrix = rotation_matrix_x * rotation_matrix_y * rotation_matrix_z
+        scale_matrix = Matrix([[scale.x,0,0,0],[0,scale.y,0,0],[0,0,scale.z,0],[0,0,0,1]])
+        self.Model = translation_matrix * rotation_matrix * scale_matrix
+
+
+        '''translation_matrix = matrix([[1,0,0,movement.x],[0,1,0,movement.y],[0,0,1,movement.z],[0,0,0,1]])
+
+        a  = rotate.x
+        rotation_matrix_x = matrix([[1,0,0,0],[0,cos(a),-sin(a),0],[0,sin(a),cos(a),0],[0,0,0,1]])
+        a = rotate.y
+        rotation_matrix_y = matrix([[cos(a),0,sin(a),0],[0,1,0,0],[-sin(a),0,cos(a),0],[0,0,0,1]])
+        a = rotate.z
+        rotation_matrix_z = matrix([[cos(a),-sin(a),0,0],[sin(a),cos(a),0,0],[0,0,1,0],[0,0,0,1]])
+
+        rotation_matrix = rotation_matrix_x @ rotation_matrix_y @ rotation_matrix_z
+        scale_matrix = matrix([[scale.x,0,0,0],[0,scale.y,0,0],[0,0,scale.z,0],[0,0,0,1]])
+        self.Model2 = translation_matrix @ rotation_matrix @ scale_matrix'''
+
 
     def draw_arrays(self,polygon):
         self.polygon = polygon

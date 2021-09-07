@@ -64,12 +64,6 @@ def bbox(A,B,C):
     ys.sort()
     return xs[0],xs[-1],ys[0],ys[-1]
 
-def transform(v, translate, scale):
-        return V3(
-            round(((v[0]+translate[0])*scale[0])),
-            round(((v[1]+translate[1])*scale[1])),
-            round(((v[2]+translate[2])*scale[2]))
-        )
 
 def shader(self, x,y):
         centerx,centery = 500,353
