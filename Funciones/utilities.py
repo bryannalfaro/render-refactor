@@ -24,6 +24,14 @@ class color(object):
         self.g = g
         self.b = b
 
+    def __getitem__(self,i):
+        if i == 0:
+            return self.r
+        elif i == 1:
+            return self.g
+        elif i == 2:
+            return self.b
+
     def __repr__(self):
         b= ccolor(self.b)
         g= ccolor(self.g)
@@ -42,6 +50,9 @@ class color(object):
         b= ccolor(self.b*k)
 
         return color(r,g,b)
+
+    def tolist(self):
+        return color(self.r,self.g,self.b)
 
 BLACK = color(0,0,0)
 WHITE = color(255,255,255)
@@ -62,7 +73,7 @@ def bbox(A,B,C):
     xs.sort()
     ys = [A.y, B.y, C.y,]
     ys.sort()
-    return xs[0],xs[-1],ys[0],ys[-1]
+    return round(xs[0]),round(xs[-1]),round(ys[0]),round(ys[-1])
 
 
 def shader(self, x,y):

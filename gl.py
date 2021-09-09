@@ -23,6 +23,9 @@ class Renderer(object):
         self.width = width
         self.height = height
         self.framebuffer = []
+        self.zbuffer = [
+            [-float('inf') for x in range(self.width)] for y in range(self.height)
+            ]
 
     def glViewPort(self, x, y, width, height):
         self.vp_x = x
@@ -150,23 +153,13 @@ class Renderer(object):
             [v.z],
             [1]
         ]
-        '''augmented_vertex2 = [
-            v.x,
-            v.y,
-            v.z,
-            1
-        ]'''
 
-        transformed_vertex = self.Model  * Matrix(augmented_vertex)
-        #transformed_vertex2 = self.Model2  @ augmented_vertex2
-        '''print('tvert',transformed_vertex)
-        print('tvert2',transformed_vertex2)
-        transformed_vertex.tolist()
-        print('tolist',transformed_vertex[0][1][0])'''
+        transformed_vertex = self.Viewport*self.Projection*self.View*self.Model  * Matrix(augmented_vertex)
+
         transformed_vertex = [
-            round(transformed_vertex[0][0][0]/transformed_vertex[0][3][0]),
-            round(transformed_vertex[0][1][0]/transformed_vertex[0][3][0]),
-            round(transformed_vertex[0][2][0]/transformed_vertex[0][3][0]),
+            (transformed_vertex[0][0][0]/transformed_vertex[0][3][0]),
+            (transformed_vertex[0][1][0]/transformed_vertex[0][3][0]),
+            (transformed_vertex[0][2][0]/transformed_vertex[0][3][0]),
         ]
         return V3(*transformed_vertex)
 
@@ -183,9 +176,11 @@ class Renderer(object):
                 for v in range(len(face)):
                     tvertex =(V3(*model.tvertices[face[v][1]-1]))
                     vertex_buffer_object.append(tvertex)
+            for v in range(len(face)):
+                vertex = (V3(*model.nvertices[face[v][2]-1]))
+                vertex_buffer_object.append(vertex)
 
         self.active_vertex_array = iter(vertex_buffer_object)
-
 
 
     def loadModelMatrix(self, movement,scale,rotate):
@@ -220,7 +215,45 @@ class Renderer(object):
         scale_matrix = matrix([[scale.x,0,0,0],[0,scale.y,0,0],[0,0,scale.z,0],[0,0,0,1]])
         self.Model2 = translation_matrix @ rotation_matrix @ scale_matrix'''
 
+    def loadViewMatrix(self, x,y,z, center):
+        M = Matrix([
+            [x.x,x.y,x.z,0],
+            [y.x,y.y,y.z,0],
+            [z.x,z.y,z.z,0],
+            [0,0,0,1],
+        ])
 
+        O = Matrix([
+            [1,0,0,-center.x],
+            [0,1,0,-center.y],
+            [0,0,1,-center.z],
+            [0,0,0,1],
+        ])
+
+        self.View = M * O
+
+    def loadProyectionMatrix(self,coeff):
+        self.Projection = Matrix([
+            [1,0,0,0],
+            [0,1,0,0],
+            [0,0,1,0],
+            [0,0,coeff,1],
+        ])
+
+    def loadViewportMatrix(self,x=0,y=0):
+        self.Viewport = Matrix([
+            [self.width/2,0,0,x+self.width/2],
+            [0,self.height/2,0,y+self.height/2],
+            [0,0,1,0],
+            [0,0,0,1],
+        ])
+    def lookAt(self,eye,center,up):
+        z = norm(sub(eye,center))
+        x = norm(cross(up,z))
+        y = norm(cross(z,x))
+        self.loadViewMatrix(x,y,z,center)
+        self.loadProyectionMatrix(-1/length(sub(eye,center)))
+        self.loadViewportMatrix()
     def draw_arrays(self,polygon):
         self.polygon = polygon
         if polygon == 'WIREFRAME':
@@ -297,15 +330,34 @@ class Renderer(object):
                 tC = next(self.active_vertex_array)
                 tD = next(self.active_vertex_array)
 
-            for i in range(0,2):
-                if i != 0:
-                    B = C
-                    C  = D
-                    self.squareDraw(A,B,C,tA,tB,tC)
-                else:
-                    self.squareDraw(A,B,C,tA,tB,tC)
+                nA = next(self.active_vertex_array)
+                nB = next(self.active_vertex_array)
+                nC = next(self.active_vertex_array)
+                nD = next(self.active_vertex_array)
 
-    def squareDraw(self,A,B,C,tA,tB,tC):
+
+                for i in range(0,2):
+                    if i != 0:
+                        B = C
+                        C  = D
+                        self.squareDraw(A,B,C,tA,tC,tD)
+                    else:
+                        self.squareDraw(A,B,C,tA,tB,tC)
+            else:
+                nA = next(self.active_vertex_array)
+                nB = next(self.active_vertex_array)
+                nC = next(self.active_vertex_array)
+                nD = next(self.active_vertex_array)
+                for i in range(0,2):
+                    if i != 0:
+                        B = C
+                        C  = D
+                        self.squareDraw(A,B,C)
+                    else:
+                        self.squareDraw(A,B,C)
+
+
+    def squareDraw(self,A,B,C,tA=None,tB=None,tC=None):
             xmin,xmax,ymin,ymax = bbox(A,B,C)
             normal = norm(cross(sub(B,A),sub(C,A)))
             intensity = dot(normal, self.light)
@@ -321,13 +373,18 @@ class Renderer(object):
                     if self.texture:
                         tx = tA.x*w+tB.x*v+tC.x*u
                         ty = tA.y*w+tB.y*v+tC.y*u
-                        fcolor = self.texture.get_color(tx,ty)
-                        b,g,r = [round(c*intensity) if intensity>0 else 0 for c in fcolor]
 
-                        col = color(r,g,b)
+                        fcolor = self.texture.get_color(tx,ty)
+
+
+
+
+                        col = fcolor* intensity
+                    else:
+                        col = WHITE * intensity
+
 
                     z = A.z * w+B.z*v+C.z*u
-                    col = WHITE * intensity
 
                     try:
                         if z> self.zbuffer[y][x]:
@@ -348,14 +405,18 @@ class Renderer(object):
             B = next(self.active_vertex_array)
             C = next(self.active_vertex_array)
 
+
             if self.texture:
                 tA = next(self.active_vertex_array)
                 tB = next(self.active_vertex_array)
                 tC = next(self.active_vertex_array)
 
+            nA = next(self.active_vertex_array)
+            nB = next(self.active_vertex_array)
+            nC = next(self.active_vertex_array)
+
             xmin,xmax,ymin,ymax = bbox(A,B,C)
-            normal = norm(cross(sub(B,A),sub(C,A)))
-            intensity = dot(normal, self.light)
+
             col = None
 
             for x in range(xmin,xmax+1):
@@ -368,15 +429,15 @@ class Renderer(object):
                     if self.texture:
                         tx = tA.x*w+tB.x*v+tC.x*u
                         ty = tA.y*w+tB.y*v+tC.y*u
-                        fcolor = self.texture.get_color(tx,ty)
 
-                        col = fcolor * intensity
-                    else:
-                        col = WHITE * intensity
+
+                        col = self.active_shader(
+                            self, triangle= (A,B,C),bar=(w,v,u), tex_coords = (tx,ty),
+                            varying_normals = (nA,nB,nC)
+                        )
+
 
                     z = A.z * w+B.z*v+C.z*u
-
-
                     try:
                         if z> self.zbuffer[y][x]:
                             if col==None:
@@ -391,16 +452,15 @@ class Renderer(object):
                     except:
                         pass
 
-
     def glFinish(self, filename):
             #bw means binary write
             f = open(filename, 'bw')
             #file header
             f.write(char('B'))
             f.write(char('M'))
-            f.write(dword(14+40+ 3*(self.width*self.height)))
+            f.write(dword(57*(self.width*self.height)))
             f.write(dword(0))
-            f.write(dword(14+40))
+            f.write(dword(54))
 
             #info header
             f.write(dword(40))
