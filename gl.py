@@ -1,9 +1,8 @@
-from obj import Obj
+from Funciones.obj import Obj
 from Funciones.characters import *
 from Funciones.math import *
 from Funciones.utilities import *
-from Funciones.write import *
-from numpy import sin,cos,matrix
+from numpy import sin,cos
 import random
 
 class Renderer(object):
@@ -88,7 +87,6 @@ class Renderer(object):
             self.default_color = color(int(r*255),int(g*255),int(b*255))
 
     #Using class implementation
-    #REESCRIBIR
     def glLine(self,x0,y0,x1,y1):
 
         x0 = int((x0+1)*(self.vp_width/2)+self.vp_x)
@@ -202,19 +200,6 @@ class Renderer(object):
         self.Model = translation_matrix * rotation_matrix * scale_matrix
 
 
-        '''translation_matrix = matrix([[1,0,0,movement.x],[0,1,0,movement.y],[0,0,1,movement.z],[0,0,0,1]])
-
-        a  = rotate.x
-        rotation_matrix_x = matrix([[1,0,0,0],[0,cos(a),-sin(a),0],[0,sin(a),cos(a),0],[0,0,0,1]])
-        a = rotate.y
-        rotation_matrix_y = matrix([[cos(a),0,sin(a),0],[0,1,0,0],[-sin(a),0,cos(a),0],[0,0,0,1]])
-        a = rotate.z
-        rotation_matrix_z = matrix([[cos(a),-sin(a),0,0],[sin(a),cos(a),0,0],[0,0,1,0],[0,0,0,1]])
-
-        rotation_matrix = rotation_matrix_x @ rotation_matrix_y @ rotation_matrix_z
-        scale_matrix = matrix([[scale.x,0,0,0],[0,scale.y,0,0],[0,0,scale.z,0],[0,0,0,1]])
-        self.Model2 = translation_matrix @ rotation_matrix @ scale_matrix'''
-
     def loadViewMatrix(self, x,y,z, center):
         M = Matrix([
             [x.x,x.y,x.z,0],
@@ -247,6 +232,7 @@ class Renderer(object):
             [0,0,1,0],
             [0,0,0,1],
         ])
+
     def lookAt(self,eye,center,up):
         z = norm(sub(eye,center))
         x = norm(cross(up,z))
@@ -254,6 +240,7 @@ class Renderer(object):
         self.loadViewMatrix(x,y,z,center)
         self.loadProyectionMatrix(-1/length(sub(eye,center)))
         self.loadViewportMatrix()
+
     def draw_arrays(self,polygon):
         self.polygon = polygon
         if polygon == 'WIREFRAME':
@@ -335,32 +322,30 @@ class Renderer(object):
                 nC = next(self.active_vertex_array)
                 nD = next(self.active_vertex_array)
 
-
                 for i in range(0,2):
                     if i != 0:
                         B = C
                         C  = D
-                        self.squareDraw(A,B,C,tA,tC,tD)
+                        self.squareDraw(A,B,C,tA,tC,tD,nA,nC,nD)
                     else:
-                        self.squareDraw(A,B,C,tA,tB,tC)
+                        self.squareDraw(A,B,C,tA,tB,tC,nA,nB,nC)
             else:
                 nA = next(self.active_vertex_array)
                 nB = next(self.active_vertex_array)
                 nC = next(self.active_vertex_array)
                 nD = next(self.active_vertex_array)
+
                 for i in range(0,2):
                     if i != 0:
                         B = C
                         C  = D
-                        self.squareDraw(A,B,C)
+                        self.squareDraw(A,B,C,nA,nC,nD)
                     else:
-                        self.squareDraw(A,B,C)
+                        self.squareDraw(A,B,C,nA,nB,nC)
 
-
-    def squareDraw(self,A,B,C,tA=None,tB=None,tC=None):
+    def squareDraw(self,A,B,C,tA=None,tB=None,tC=None,nA=None,nB=None,nC=None):
             xmin,xmax,ymin,ymax = bbox(A,B,C)
-            normal = norm(cross(sub(B,A),sub(C,A)))
-            intensity = dot(normal, self.light)
+
             col = None
 
             for x in range(xmin,xmax+1):
@@ -374,15 +359,10 @@ class Renderer(object):
                         tx = tA.x*w+tB.x*v+tC.x*u
                         ty = tA.y*w+tB.y*v+tC.y*u
 
-                        fcolor = self.texture.get_color(tx,ty)
-
-
-
-
-                        col = fcolor* intensity
-                    else:
-                        col = WHITE * intensity
-
+                        col = self.active_shader(
+                            self, triangle= (A,B,C),bar=(w,v,u), tex_coords = (tx,ty),
+                            varying_normals = (nA,nB,nC)
+                        )
 
                     z = A.z * w+B.z*v+C.z*u
 
@@ -435,7 +415,6 @@ class Renderer(object):
                             self, triangle= (A,B,C),bar=(w,v,u), tex_coords = (tx,ty),
                             varying_normals = (nA,nB,nC)
                         )
-
 
                     z = A.z * w+B.z*v+C.z*u
                     try:
