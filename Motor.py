@@ -19,35 +19,17 @@ r.glInit()
 r.glCreateWindow(640,300)
 bg = Texture('./Texturas/parg.bmp')
 r.framebuffer = bg.pixels
+r.lookAt(V3(-0.3,0,5),V3(0,0.4,-1),V3(0,1,0))
 
-
-#t= Texture('./Texturas/model.bmp')
-#r.texture = t
-r.lookAt(V3(0,0,5),V3(0,0,0),V3(0,1,0))
-#r.load('./modelos/model.obj',(0,0,0),(1,1,1),(0,0,0))
 r.active_shader = gourad
-#r.draw_arrays('TRIANGLES')
 
 t= Texture('./Texturas/trump.bmp')
 r.texture = t
 r.load('./newModels/trump.obj',(0.02,0.2,0.8),(0.2,0.2,0.2),(0,0,0))
 r.draw_arrays('TRIANGLES')
 
-'''t = Texture('./Texturas/wine.bmp')
-r.texture = t
-r.load('./newModels/wine.obj',(0,0,0),(0.009,0.03,0.03),(pi/2,pi,pi))
-r.draw_arrays('SQUARE')'''
-
-'''t= Texture('./Texturas/Omnitrix.bmp')
-r.texture = t
-r.load('./newModels/ovni.obj',(0,0,0),(0.04,0.04,0.04),(0,pi/8,0))
-r.draw_arrays('TRIANGLES')'''
-
-
 t = Texture('./Texturas/Horse_v01.bmp')
 r.texture = t
-#-pi/2
-#2*pi
 r.load('./newModels/horse1.obj',(0,0,0.7),(0.0003,0.0003,0.0003),(-pi/2,2*pi,2*pi))
 r.draw_arrays('SQUARE')
 
@@ -65,5 +47,6 @@ t = Texture('./Texturas/textureWolf.bmp')
 r.texture = t
 r.load('./newModels/wolf.obj',(-0.7,0,0),(0.003,0.003,0.003),(0,pi/4,0))
 r.draw_arrays('TRIANGLES')
+
 r.glFinish("./salidas/clear.bmp")
 
