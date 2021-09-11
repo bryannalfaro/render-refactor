@@ -3,8 +3,8 @@ Universidad del Valle de Guatemala
 Graficas por computadora - Bryann Alfaro
 
 #TODO
-#Ver dibujado correcto de escena y de modelo
-#Organizar
+#Flat Shading
+#Normal
 '''
 from gl import Renderer
 from Funciones.textures import Texture
@@ -28,6 +28,7 @@ r.texture = t
 r.load('./newModels/trump.obj',(0.02,0.2,0.8),(0.2,0.2,0.2),(0,0,0))
 r.draw_arrays('TRIANGLES')
 
+r.active_shader = custom
 t = Texture('./Texturas/Horse_v01.bmp')
 r.texture = t
 r.load('./newModels/horse1.obj',(0,0,0.7),(0.0003,0.0003,0.0003),(-pi/2,2*pi,2*pi))
@@ -38,11 +39,13 @@ r.texture = t
 r.load('./newModels/dog11.obj',(0.3,0,0.7),(0.005,0.005,0.005),(-pi/2,2*pi,-pi/2))
 r.draw_arrays('SQUARE')
 
+r.active_shader = unlit
 t = Texture('./Texturas/wine.bmp')
 r.texture = t
 r.load('./newModels/wine.obj',(0.2,0.4,0.5),(0.004,0.004,0.009),(pi/2,pi,pi))
 r.draw_arrays('SQUARE')
 
+r.active_shader = custom
 t = Texture('./Texturas/textureWolf.bmp')
 r.texture = t
 r.load('./newModels/wolf.obj',(-0.7,0,0),(0.003,0.003,0.003),(0,pi/4,0))

@@ -407,6 +407,7 @@ class Renderer(object):
                         continue
 
                     if self.texture:
+
                         tx = tA.x*w+tB.x*v+tC.x*u
                         ty = tA.y*w+tB.y*v+tC.y*u
 
@@ -415,6 +416,7 @@ class Renderer(object):
                             self, triangle= (A,B,C),bar=(w,v,u), tex_coords = (tx,ty),
                             varying_normals = (nA,nB,nC)
                         )
+
 
                     z = A.z * w+B.z*v+C.z*u
                     try:
