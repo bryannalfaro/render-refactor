@@ -2,9 +2,7 @@
 Universidad del Valle de Guatemala
 Graficas por computadora - Bryann Alfaro
 
-#TODO
-#Flat Shading
-#Normal
+#flat y normal
 '''
 from gl import Renderer
 from Funciones.textures import Texture
@@ -48,6 +46,7 @@ r.draw_arrays('SQUARE')
 r.active_shader = custom
 t = Texture('./Texturas/textureWolf.bmp')
 r.texture = t
+#(-0.7,0,0),(0.003,0.003,0.003),(0,pi/4,0)
 r.load('./newModels/wolf.obj',(-0.7,0,0),(0.003,0.003,0.003),(0,pi/4,0))
 r.draw_arrays('TRIANGLES')
 
