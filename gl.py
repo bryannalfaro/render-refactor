@@ -2,6 +2,8 @@ from Funciones.obj import Obj
 from Funciones.characters import *
 from Funciones.math import *
 from Funciones.utilities import *
+
+
 from numpy import sin,cos
 import random
 
@@ -180,8 +182,7 @@ class Renderer(object):
 
         self.active_vertex_array = iter(vertex_buffer_object)
 
-
-    def loadModelMatrix(self, movement,scale,rotate):
+    def loadModelMatrix(self,movement,scale,rotate):
         movement = V3(*movement)
         scale = V3(*scale)
         rotate = V3(*rotate)
@@ -197,8 +198,7 @@ class Renderer(object):
 
         rotation_matrix = rotation_matrix_x * rotation_matrix_y * rotation_matrix_z
         scale_matrix = Matrix([[scale.x,0,0,0],[0,scale.y,0,0],[0,0,scale.z,0],[0,0,0,1]])
-        self.Model = translation_matrix * rotation_matrix * scale_matrix
-
+        self.Model =  translation_matrix * rotation_matrix * scale_matrix
 
     def loadViewMatrix(self, x,y,z, center):
         M = Matrix([
@@ -239,7 +239,7 @@ class Renderer(object):
         y = norm(cross(z,x))
         self.loadViewMatrix(x,y,z,center)
         self.loadProyectionMatrix(-1/length(sub(eye,center)))
-        self.loadViewportMatrix()
+        self.loadViewportMatrix(0,0)
 
     def draw_arrays(self,polygon):
         self.polygon = polygon
